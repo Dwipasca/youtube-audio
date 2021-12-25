@@ -1,0 +1,23 @@
+.videoForm {
+  display: flex;
+  align-items: center;
+}
+
+.videoForm__input {
+  width: 100%;
+  margin-right: 8px;
+  height: 34px;
+  border-radius: 8px;;
+  border: 1px solid #ddd;
+  padding: 4px 12px;
+  font-size: 16px;
+}
+
+.videoForm__button {
+  font-size: 16px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 0px;
+  background: tomato;
+  color: white;
+}
