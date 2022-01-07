@@ -9,7 +9,6 @@ export default async function handler(
   const channelUrl = req.query.channelUrl as string;
   const q = req.query.q as string;
   const data = await scrapeYoutubeChannelSearch(channelUrl, q);
-  console.log(data);
   res.status(200).json({
     items: data,
   });

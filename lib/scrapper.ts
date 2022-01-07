@@ -1,16 +1,42 @@
+// with reference https://github.com/whitep4nth3r/puppeteer-demo/blob/main/api/screenshot.js
 import puppeteer from 'puppeteer';
 import { VideoData } from './video';
+const chrome = require("chrome-aws-lambda");
 
-interface SearchResultRawData {
+const exePath =
+  process.platform === "win32"
+    ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+    : process.platform === "linux"
+    ? "/usr/bin/google-chrome"
+    : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
+async function getOptions() {
+  const isDev = process.env.NODE_ENV === 'development';
+  let options;
+  if (isDev) {
+    options = {
+      args: [],
+      executablePath: exePath,
+      headless: true,
+    };
+  } else {
+    options = {
+      args: chrome.args,
+      executablePath: await chrome.executablePath,
+      headless: chrome.headless,
+    };
+  }
+  return options;
 }
-
-
+  
 export async function scrapeYoutubeChannelSearch(channelUrl: string, query: string = '*') : Promise<VideoData[]> {
-  const browser = await puppeteer.launch();
+  const opts = await getOptions();
+  const browser = await puppeteer.launch(opts);
   const page = await browser.newPage();
   const url = `${channelUrl}/search?query=${query}`;
-  console.log(url)
+
+  console.log('Scrapping: ' + url)
+
   await page.goto(`${channelUrl}/search?query=${query}`, {
     waitUntil: 'networkidle2',
   });
@@ -19,11 +45,8 @@ export async function scrapeYoutubeChannelSearch(channelUrl: string, query: stri
       return href.replace('/watch?v=', '');
     }
       
-    // return document.body.innerHTML;
     let els = Array.from(document.querySelectorAll('a#video-title'));
-    // let els = Array.from(document.querySelectorAll('div#meta'));
-    // console.log('els', els);
-
+    
     return els.map((el) => {
         const e = el as unknown as HTMLElement;
         const data: Pick<VideoData, 'id' | 'title'> = {
@@ -35,11 +58,9 @@ export async function scrapeYoutubeChannelSearch(channelUrl: string, query: stri
     });
   });
 
-//   console.log(data.match(/href\=\"(.*)\"/g))
-
   return data.map(item => ({
-      ...item,
-      author: channelUrl,
-      author_url: channelUrl,
+    ...item,
+    author: channelUrl,
+    author_url: channelUrl,
   }));
 }

@@ -29,6 +29,14 @@ a {
   background: black !important;
 }
 
+.show-video .plyr--video {
+  height: auto;
+}
+
+.show-video .plyr--video .plyr__controls{
+  background: transparent !important;
+}
+
 .shareBox {
   margin-top: 1rem;
   display: flex;

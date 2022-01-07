@@ -4,16 +4,19 @@ import styles from '../styles/Home.module.css'
 import dynamic from 'next/dynamic'
 import { useEffect, useState, FormEvent, useCallback } from 'react';
 import VideoForm from '../components/VideoForm';
-import type { VideoMetadata, VideoData, YoutubeSearchListResponse } from '../lib/video';
+import type { VideoData, YoutubeSearchListResponse } from '../lib/video';
 import VideoInfo from '../components/VideoInfo';
 import VideoList from '../components/VideoList';
 
 const VideoPlayer = dynamic(() => import('../components/VideoPlayer'));
 const ShareBox = dynamic(() => import('../components/ShareBox'));
 
+type BooleanStr = '0' | '1';
+
 interface Props {
   videoID: string;
   data?: VideoData;
+  showVideo: boolean;
 }
 
 interface SearchFormElement extends HTMLFormElement {
@@ -38,33 +41,23 @@ function getVideosWithScrapping({ q = '', channelUrl, pageToken }: { channelUrl:
     .then(res => res.json())
 }
 
-const Home: NextPage<Props> = ({ data, videoID }) => {
+const Home: NextPage<Props> = ({ data, videoID, showVideo }) => {
   const [url, setUrl] = useState<string>('');
   const [q, setQ] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  // Youtube API
   const [pageToken, setPageToken] = useState<string>('');
   const [nextPageToken, setNextPageToken] = useState<string>('');
+  
   const [videos, setVideos] = useState<VideoData[]>([]);
-  const handleViewMore = useCallback(() => {
-    setPageToken(nextPageToken);
-  }, [setPageToken]);
   useEffect(() => {
     if (data?.author_url) {
       setIsSearching(true);
       getVideosWithScrapping({
         channelUrl: data?.author_url,
         q,
-        // pageToken,
       })
         .then(res => {
-          // setNextPageToken(res.nextPageToken || '');
-          // const vids : VideoData[] = res.items.map(item => ({
-          //   id: item.id,
-          //   title: item.snippet.title,
-          //   author: item.snippet.channelTitle,
-          //   author_url: data?.author_url,
-          //   publishedAt: item.snippet.publishedAt,
-          // }));
           setVideos(res.items);
           setIsSearching(false);
         })
@@ -76,7 +69,7 @@ const Home: NextPage<Props> = ({ data, videoID }) => {
 
     console.info('Made by Abu Fatimah di Palu. Say hi https://www.linkedin.com/in/muhammad-rizki-rijal-0a711575/');
     setUrl(window.location.href);
-  }, [/*setNextPageToken,*/ data, q]);
+  }, [data, q]);
 
   const title = data?.title || '';
   const htmlTitle = data ? data.title : 'Selamat Datang';
@@ -104,7 +97,7 @@ const Home: NextPage<Props> = ({ data, videoID }) => {
         {data ? (
           <>
             <VideoInfo data={data} />
-            <VideoPlayer videoID={videoID} />
+            <VideoPlayer defaultShowVideo={showVideo} videoID={videoID} />
             <ShareBox url={url} />
             <hr />
             <div>
@@ -135,6 +128,9 @@ const Home: NextPage<Props> = ({ data, videoID }) => {
 
 Home.getInitialProps = async function (ctx) {
   const videoID : string = (ctx.query.videoID || '') as string;
+  const showVideoStr : string = (ctx.query.showVideo || '0') as BooleanStr;
+  const showVideo : boolean = showVideoStr !== '0';
+
   // 6o0BrP41SAo
   try {
     const data = await fetch(`https://www.youtube.com/oembed?url=https://youtu.be/${videoID}&format=json`)
@@ -153,9 +149,9 @@ Home.getInitialProps = async function (ctx) {
       author_url: data.author_url,
     };
 
-    return { data: videoData, videoID };
+    return { data: videoData, videoID, showVideo };
   } catch (err) {
-    return { videoID }
+    return { videoID, showVideo }
   }
 }
 

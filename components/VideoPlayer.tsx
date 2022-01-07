@@ -1,13 +1,17 @@
 import Plyr from 'plyr'
 import 'plyr-react/dist/plyr.css'
-import { useMemo, useRef, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props {
   videoID: string;
+  defaultShowVideo?: boolean;
 }
 
 function Player(props: Props) {
-  const videoID = props.videoID;
+  const { videoID, defaultShowVideo = false } = props;
+  const [isDefaultShowVideo] = useState<boolean>(defaultShowVideo);
+  const [isShowVideo, setShowVideo] = useState<boolean>(defaultShowVideo);
+  const className = isShowVideo ? 'show-video' : '';
   const options = {
     hideControls: false,
     controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'captions']
@@ -18,14 +22,10 @@ function Player(props: Props) {
   }, []);
 
   return (
-    <div>
+    <div className={className}>
       <div id="player" data-plyr-provider="youtube" data-plyr-embed-id={videoID}  />
-      {/* <Plyr ref={ref} source={{
-      type: 'video',
-      sources: [
-        { src: videoID, provider: 'youtube' }
-      ]
-    }} options={options} /> */}
+
+      {isDefaultShowVideo && <button onClick={() => setShowVideo(!isShowVideo)}>{isShowVideo ? 'Sembunyi Video' : 'Tampilkan Video'}</button>}
     </div>
   );
 }
